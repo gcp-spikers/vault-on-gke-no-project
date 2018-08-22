@@ -63,6 +63,88 @@ Engine](https://github.com/kelseyhightower/vault-on-google-kubernetes-engine), b
     $ vault kv put secret/foo a=b
     ```
 
+## Set up Transit
+
+1. Enable Transit
+
+    ```
+    $ vault secrets enable transit
+    ```
+1. Create a key    
+    ```bash
+    export VAULT_KEYNAME="test-asymmetric"
+
+    cat > /tmp/transit_payload.json <<EOF
+    {
+        "type": "rsa-4096",
+        "exportable": true
+    }
+    EOF    
+
+    curl \
+        --header "X-Vault-Token: ${VAULT_TOKEN}" \
+        --request POST \
+        --cacert ./tls/ca.pem  \
+        --data @/tmp/transit_payload.json \
+        ${VAULT_ADDR}/v1/transit/keys/${VAULT_KEYNAME}
+    ```
+
+## Interact with Transit
+
+### List keys
+
+**NB: many of the requests are piped through [jq][jq-home] for readability, this is entirely optional**
+
+```bash
+curl \
+    --header "X-Vault-Token: ${VAULT_TOKEN}" \
+    --request LIST \
+    --cacert ./tls/ca.pem  \
+    ${VAULT_ADDR}/v1/transit/keys | jq .
+```
+
+### Sign some data
+
+1. Create some data to sign
+    ```bash
+    cat > /tmp/signing_payload.json <<EOF
+    {
+        "input": "$(echo 'hello there' | base64 -)"
+    }
+    EOF
+    ```
+1. Sign the payload
+    ```bash
+    curl \
+        --header "X-Vault-Token: ${VAULT_TOKEN}" \
+        --request POST \
+        --cacert ./tls/ca.pem  \
+        --data @/tmp/signing_payload.json \
+        ${VAULT_ADDR}/v1/transit/sign/${VAULT_KEYNAME}/sha2-512 | jq --raw-output .data.signature
+    ```
+1. With the above `jq` pipe this will just output the signature data.
+
+1. Test a payload
+    1. Create verification blob:
+        ```bash
+        export TEST_SIGNATURE="[the data retrieved from previous step]"
+        cat > /tmp/verify_payload.json <<EOF
+        {
+            "input": "$(echo 'hello there' | base64 -)",
+            "signature": "${TEST_SIGNATURE}"
+        }
+        EOF
+        ```
+    1. Verify the blob - this will show just "true" or "false" depending on whether you changed the "hello there" message in the previous step
+        ```bash
+        curl \
+            --header "X-Vault-Token: ${VAULT_TOKEN}" \
+            --request POST --cacert ./tls/ca.pem \
+            --data @/tmp/verify_payload.json \
+            ${VAULT_ADDR}/v1/transit/verify/test-asymmetric/sha2-512 | jq --raw-output .data.valid
+        ```
+    
+
 ## Cleaning Up
 
 ```
