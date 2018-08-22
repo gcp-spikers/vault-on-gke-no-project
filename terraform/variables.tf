@@ -1,3 +1,8 @@
+variable "credential" {
+  default     = "account.json"
+  description = "Contents of a file that contains your service account private key in JSON format."
+}
+
 variable "region" {
   type    = "string"
   default = "us-east4"
@@ -13,12 +18,13 @@ variable "project" {
   default = ""
 }
 
-variable "billing_account" {
-  type = "string"
-}
+# variable "billing_account" {
+#   type = "string"
+# }
 
 variable "org_id" {
   type = "string"
+  default = ""
 }
 
 variable "instance_type" {
@@ -70,7 +76,7 @@ variable "kms_crypto_key_roles" {
 
 variable "kubernetes_version" {
   type    = "string"
-  default = "1.10.5-gke.3"
+  default = "1.10.4-gke.3"
 }
 
 variable "kubernetes_logging_service" {

@@ -3,3 +3,5 @@ terraform/credentials.json
 terraform/terraform.tfvars
 terraform/terraform.tfstate*
 tls/*
+account.json
+terraform.plan

@@ -33,8 +33,8 @@ Engine](https://github.com/kelseyhightower/vault-on-google-kubernetes-engine), b
 
     This operation will take some time as it:
 
-    1. Creates a new project
-    1. Enables the required services on that project
+    1. ~Creates a new project~
+    1. Enables the required services ~on that project~
     1. Creates a bucket for storage
     1. Creates a KMS key for encryption
     1. Creates a service account with the most restrictive permissions to those resources
