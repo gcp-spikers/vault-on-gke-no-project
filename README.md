@@ -141,9 +141,30 @@ curl \
             --header "X-Vault-Token: ${VAULT_TOKEN}" \
             --request POST --cacert ./tls/ca.pem \
             --data @/tmp/verify_payload.json \
-            ${VAULT_ADDR}/v1/transit/verify/test-asymmetric/sha2-512 | jq --raw-output .data.valid
+            ${VAULT_ADDR}/v1/transit/verify/${VAULT_KEYNAME}/sha2-512 | jq --raw-output .data.valid
         ```
-    
+
+### Export private key
+
+>> **!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!**
+
+>> **THIS IS A TEMPORARY MEASURE!**
+
+>> **DO NOT USE IN PRODUCTION**
+
+>> **!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!**
+
+1. Choose exported key type (seems to always return the PRIVATE key regardless).  Valid options are:
+    - `encryption-key`
+    - `signing-key`
+    - `hmac-key` (not likely relevant to our needs)
+1. Get a key for encryption (public key)
+    ```bash
+    curl \
+        --header "X-Vault-Token: ${VAULT_TOKEN}" \
+        --cacert ./tls/ca.pem \
+        ${VAULT_ADDR}/v1/transit/export/${EXPORTED_KEY_TYPE}/${VAULT_KEYNAME}
+    ```
 
 ## Cleaning Up
 
