@@ -30,6 +30,8 @@ resource "google_service_account" "vault-server" {
   account_id   = "vault-server"
   display_name = "Vault Server"
   project = "${var.project}"
+
+  depends_on = ["google_project_service.service"]
 }
 
 # Create a service account key
