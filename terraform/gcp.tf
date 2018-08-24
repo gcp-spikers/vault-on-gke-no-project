@@ -48,7 +48,7 @@ resource "google_project_iam_member" "service-account" {
 # Create the storage bucket
 resource "google_storage_bucket" "vault" {
   project = "${var.project}"
-  name = "${var.project}-vault-storage"
+  name = "${var.project}-${random_id.random.hex}-vault-storage"
 
   force_destroy = true
 
@@ -71,7 +71,7 @@ resource "google_storage_bucket_iam_member" "vault-server" {
 
 # Create the KMS key ring
 resource "google_kms_key_ring" "vault" {
-  name     = "vault"
+  name     = "vault-${random_id.random.hex}"
   location = "${var.region}"
   project  = "${var.project}"
 
