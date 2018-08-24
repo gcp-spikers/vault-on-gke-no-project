@@ -23,12 +23,27 @@ Engine](https://github.com/kelseyhightower/vault-on-google-kubernetes-engine), b
 
 1. Install the [kubernetes CLI](https://kubernetes.io/docs/tasks/tools/install-kubectl/) (aka `kubectl`)
 
+1. **NB: unlike original repo, this expects you to be authenticated as a terraform service account**
+
+    1. Create service account for `terraform` 
+        ```
+        gcloud iam service-accounts create terraform --display-name "terraform"
+        gcloud iam service-accounts keys create account.json --iam-account terraform@$(gcloud info --format='value(config.project)').iam.gserviceaccount.com
+        ```
+        Above command will download the key and store it in `account.json` file
+    
+    1.  Grant owner role to terraform service account    
+        ```
+        gcloud projects add-iam-policy-binding $(gcloud info --format='value(config.project)') --member serviceAccount:terraform@$(gcloud info --format='value(config.project)').iam.gserviceaccount.com --role roles/owner
+        ```
+
 1. Run Terraform:
 
     ```
     $ cd terraform/
     $ terraform init
-    $ terraform apply
+    $ terraform plan -out terraform.plan
+    $ terraform apply terraform.plan
     ```
 
     This operation will take some time as it:
@@ -143,28 +158,39 @@ curl \
             --data @/tmp/verify_payload.json \
             ${VAULT_ADDR}/v1/transit/verify/${VAULT_KEYNAME}/sha2-512 | jq --raw-output .data.valid
         ```
+### Read public key
+
+```bash
+
+```
 
 ### Export private key
 
 >> **!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!**
 
->> **THIS IS A TEMPORARY MEASURE!**
+>> **THIS IS A TEMPORARY DOCUMENTATION!**
 
 >> **DO NOT USE IN PRODUCTION**
 
+>> **ONLY HERE FOR REFERENCE**
+
 >> **!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!**
 
-1. Choose exported key type (seems to always return the PRIVATE key regardless).  Valid options are:
-    - `encryption-key`
-    - `signing-key`
-    - `hmac-key` (not likely relevant to our needs)
-1. Get a key for encryption (public key)
+1. Choose exported key type (we're using `encryption-key`, but always returns the PRIVATE key when asymmetric).
+1. Get a key for signing (private key)
     ```bash
     curl \
         --header "X-Vault-Token: ${VAULT_TOKEN}" \
         --cacert ./tls/ca.pem \
-        ${VAULT_ADDR}/v1/transit/export/${EXPORTED_KEY_TYPE}/${VAULT_KEYNAME}
+        ${VAULT_ADDR}/v1/transit/export/encryption-key/${VAULT_KEYNAME}
     ```
+1. Get the public key
+    ```bash
+    curl \
+        --header "X-Vault-Token: ${VAULT_TOKEN}" \
+        --cacert ./tls/ca.pem \
+        ${VAULT_ADDR}
+        /v1/transit/keys/
 
 ## Cleaning Up
 
