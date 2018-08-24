@@ -6,6 +6,18 @@ provider "google" {
   credentials = "${file("${var.credential}")}"
 }
 
+# Enable required services on the project
+resource "google_project_service" "service" {
+  count = "${length(var.project_services)}"
+  project = "${var.project}"
+  service = "${element(var.project_services, count.index)}"
+
+  # Do not disable the service on destroy. On destroy, we are going to
+  # destroy the project, but we need the APIs available to destroy the
+  # underlying resources.
+  disable_on_destroy = false
+}
+
 # Generate a random id for the project - GCP projects must have globally
 # unique names
 resource "random_id" "random" {
@@ -31,18 +43,6 @@ resource "google_project_iam_member" "service-account" {
   project = "${var.project}"
   role    = "${element(var.service_account_iam_roles, count.index)}"
   member  = "serviceAccount:${google_service_account.vault-server.email}"
-}
-
-# Enable required services on the project
-resource "google_project_service" "service" {
-  count = "${length(var.project_services)}"
-  project = "${var.project}"
-  service = "${element(var.project_services, count.index)}"
-
-  # Do not disable the service on destroy. On destroy, we are going to
-  # destroy the project, but we need the APIs available to destroy the
-  # underlying resources.
-  disable_on_destroy = false
 }
 
 # Create the storage bucket

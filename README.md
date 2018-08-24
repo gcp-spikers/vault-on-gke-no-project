@@ -23,27 +23,39 @@ Engine](https://github.com/kelseyhightower/vault-on-google-kubernetes-engine), b
 
 1. Install the [kubernetes CLI](https://kubernetes.io/docs/tasks/tools/install-kubectl/) (aka `kubectl`)
 
+1. Set GCP project
+    ```bash
+    gcloud config set project PROJECT_ID
+    ```
+    Where `PROJECT_ID` should be the unique ID of your project (not project name, not project number)
+1. Create terraform variable with project-id
+    ```bash
+    cat > terraform.tfvars <<<EOF
+    project="$(gcloud info --format='value(config.project)')"
+    EOF
+    ```
 1. **NB: unlike original repo, this expects you to be authenticated as a terraform service account**
 
     1. Create service account for `terraform` 
-        ```
+        ```bash
         gcloud iam service-accounts create terraform --display-name "terraform"
+
         gcloud iam service-accounts keys create account.json --iam-account terraform@$(gcloud info --format='value(config.project)').iam.gserviceaccount.com
         ```
         Above command will download the key and store it in `account.json` file
     
     1.  Grant owner role to terraform service account    
-        ```
+        ```bash
         gcloud projects add-iam-policy-binding $(gcloud info --format='value(config.project)') --member serviceAccount:terraform@$(gcloud info --format='value(config.project)').iam.gserviceaccount.com --role roles/owner
         ```
 
 1. Run Terraform:
 
-    ```
-    $ cd terraform/
-    $ terraform init
-    $ terraform plan -out terraform.plan
-    $ terraform apply terraform.plan
+    ```bash
+    cd terraform/
+    terraform init
+    terraform plan -out terraform.plan
+    terraform apply terraform.plan
     ```
 
     This operation will take some time as it:
@@ -66,24 +78,24 @@ Engine](https://github.com/kelseyhightower/vault-on-google-kubernetes-engine), b
 
 1. Export the Vault variables:
 
-    ```
-    $ export VAULT_ADDR="https://$(terraform output address):8200"
-    $ export VAULT_CAPATH="tls/ca.pem"
-    $ export VAULT_TOKEN="$(terraform output token)"
+    ```bash
+    export VAULT_ADDR="https://$(terraform output address):8200"
+    export VAULT_CAPATH="tls/ca.pem"
+    export VAULT_TOKEN="$(terraform output token)"
     ```
 
 1. Run some commands
 
-    ```
-    $ vault kv put secret/foo a=b
+    ```bash
+    vault kv put secret/foo a=b
     ```
 
 ## Set up Transit
 
 1. Enable Transit
 
-    ```
-    $ vault secrets enable transit
+    ```bash
+    vault secrets enable transit
     ```
 1. Create a key    
     ```bash
